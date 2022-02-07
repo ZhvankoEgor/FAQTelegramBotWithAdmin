@@ -1,0 +1,13 @@
+{% extends "base_FAQ.html" %}
+{% block title %}{{ bot.bot_name }}{% endblock %}
+{% block content %}
+    <a href="{% url 'FAQ:edit_settings_bot' bot.id %}">Настройки бота - {{ bot.bot_name }}</a>
+    <div>Вопросы бота:</div>
+
+    {% for question in questions%}
+        <h2>
+            <a href="{{ question.get_absolute_url }}">{{ question.question }}</a>
+        </h2>
+    {% endfor %}
+    <a href="{% url 'FAQ:create_question' bot.id %}" class="button">Добавить вопрос</a>
+{% endblock %}

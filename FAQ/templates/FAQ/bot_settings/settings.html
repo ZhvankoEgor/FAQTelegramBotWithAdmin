@@ -1,0 +1,18 @@
+{% extends "base_FAQ.html" %}
+{% block title %}Share a post{% endblock %}
+{% block content %}
+    {% if sent %}
+        <h1> Настройки изменены </h1>
+        <p>
+            "{{ bot.bot_name }}" обновлены настройки.
+        </p>
+    {% else %}
+        <h1>Отредактировать настройки "{{ bot.bot_name }}"</h1>
+        <form action="." method="post">
+            {{ form.as_p }}
+            {% csrf_token %}
+            <input type="submit" value="Сохранить">
+        </form>
+        <a href="{% url 'FAQ:delete_bot' bot.id %}" class="button">Удалить бота</a>
+    {% endif %}
+{% endblock %}

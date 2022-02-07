@@ -1,0 +1,9 @@
+ {% extends "base_FAQ.html" %}
+{% block title %}Удалить бота {{ object }}{% endblock %}
+{% block content %}
+    <form method="post">{% csrf_token %}
+        <p>Вы действительно хотите удалить бота "{{ object }}" и все его вопросы?</p>
+        <input type="submit" value="Удалить">
+    </form>
+    <a href="{% url 'FAQ:settings_bot_detail' object.pk %}"  class="button">Отмена</a>
+{% endblock %}

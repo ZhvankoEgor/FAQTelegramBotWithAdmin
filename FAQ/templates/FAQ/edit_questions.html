@@ -1,0 +1,32 @@
+{% extends "base_FAQ.html" %}
+{% block title %}Share a post{% endblock %}
+{% block content %}
+    {% if sent %}
+        <h1> Настройки изменены </h1>
+        <p>
+            "{{ bot.bot_name }}" обновлены настройки.
+        </p>
+    {% else %}
+        <h4>Отредактировать вопрос "{{ question.question }}"</h4>
+        <form method="post">
+            {{ formset.management_form }}
+            <table class="table table-hover">
+                {{ form }}
+            </table>
+            <h4>Укажите дочерние вопросы:</h4>
+                <div class="row">
+                     <table class="table table-hover">
+                        {% for form in formset %}
+                            {{ form.as_table }}
+                        {% endfor %}
+                    </table>
+                </div>
+             {% csrf_token %}
+            <input type="submit" class="btn btn-outline-success" value="Сохранить">
+            <a href="{% url 'FAQ:delete_question' bot.id question.id %}" class="btn btn-outline-danger">Удалить вопрос</a>
+        </form>
+
+    {% endif %}
+{% endblock %}
+
+

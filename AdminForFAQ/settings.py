@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from django.urls import reverse_lazy
+
+LOGIN_REDIRECT_URL = reverse_lazy('FAQ:bot_list')
+LOGIN_URL = reverse_lazy('login')
+LOGOUT_URL = reverse_lazy('logout')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,12 +30,15 @@ SECRET_KEY = 'django-insecure-1j^!@y0#oagamg0j+2vcc@qg823^&wsxvfooy7!0l*a7)g(^yx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["telegramfaqbot.ru",
+                 '127.0.0.1',]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'account',
+    'guardian',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -68,6 +76,11 @@ TEMPLATES = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend', # Этот бэкенд Django использует по умолчанию
+    'guardian.backends.ObjectPermissionBackend', # А это  бэкенд django_guardian
+)
+
 WSGI_APPLICATION = 'AdminForFAQ.wsgi.application'
 
 
@@ -76,8 +89,11 @@ WSGI_APPLICATION = 'AdminForFAQ.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'massazhkra_telegram',
+        'USER': 'massazhkra_telegram',
+        'PASSWORD': 'PM82Gszm',
+        'HOST': 'localhost',
     }
 }
 
@@ -104,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 

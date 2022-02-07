@@ -1,0 +1,9 @@
+ {% extends "base_FAQ.html" %}
+{% block title %}Удалить вопрос {{ object }}{% endblock %}
+{% block content %}
+    <form method="post">{% csrf_token %}
+        <p>Вы действительно хотите удалить вопрос "{{ object }}" и все его связи?</p>
+        <input type="submit" value="Удалить">
+    </form>
+    <a href="{% url 'FAQ:edit_questions' object.bot object.pk %}"  class="button">Отмена</a>
+{% endblock %}
