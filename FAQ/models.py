@@ -22,8 +22,8 @@ class Questions(models.Model):
         ordering = ('-id',)
 
     def get_absolute_url(self):
-        return reverse('FAQ:edit_questions', kwargs={'question_id': str(self.id),
-                                                     'bot_id': str(self.bot)})
+        return reverse('FAQ:edit_questions', kwargs={'question_id': self.id,
+                                                     'bot_id': self.bot.id})
 
     def __str__(self):
         return self.question
@@ -53,9 +53,8 @@ class SettingsBot(models.Model):
         ('неверный токен', 'Неверный токен'),
     )
     id = models.BigAutoField(primary_key=True)
-    bot_name = models.CharField(max_length=50, verbose_name="Название бота")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='выключен')
-    # user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='settings_bots', on_delete=models.CASCADE)
+    bot_name = models.CharField(max_length=50, verbose_name="Название")
+    status = models.CharField(max_length=20, verbose_name="Статус", choices=STATUS_CHOICES, default='выключен')
     user = models.ForeignKey(User, related_name='settings_bots', on_delete=models.CASCADE)
     title_question = models.TextField(default="Добрый день!\nКакой у вас воопрос?", verbose_name="Титульное сообщение")
     created = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
@@ -70,15 +69,16 @@ class SettingsBot(models.Model):
         MinValueValidator(1)
     ])
     interval_refresh_base = models.IntegerField(default=20, verbose_name="Интервал синхронизации вопросов в сек", validators=[
-        MinValueValidator(10)
+        MinValueValidator(20)
     ])
 
     class Meta:
         verbose_name = "Настройки бота"
         verbose_name_plural = "Настройки бота"
+        ordering = ('status', '-id')
 
     def __str__(self):
-        return str(self.id)
+        return str(self.bot_name)
 
     def get_absolute_url(self):
         return reverse('FAQ:settings_bot_detail', kwargs={'bot_id': str(self.id)})

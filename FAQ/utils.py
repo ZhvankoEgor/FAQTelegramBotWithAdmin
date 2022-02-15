@@ -7,5 +7,5 @@ from .models import *
 class AuthorFilterMixin:
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
-        test_on_author = get_object_or_404(SettingsBot, id=self.kwargs['bot_id'], user=self.request.user)
-        return super().dispatch(*args, **kwargs)
+        bot = get_object_or_404(SettingsBot, id=self.kwargs['bot_id'], user=self.request.user)
+        return super().dispatch(*args, **kwargs, bot=bot)

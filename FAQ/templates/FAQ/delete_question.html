@@ -1,9 +1,21 @@
  {% extends "base_FAQ.html" %}
-{% block title %}Удалить вопрос {{ object }}{% endblock %}
+{% block title %}Удалить вопрос{{ object }}{% endblock %}
 {% block content %}
-    <form method="post">{% csrf_token %}
-        <p>Вы действительно хотите удалить вопрос "{{ object }}" и все его связи?</p>
-        <input type="submit" value="Удалить">
-    </form>
-    <a href="{% url 'FAQ:edit_questions' object.bot object.pk %}"  class="button">Отмена</a>
+ <div class="container">
+    <div class="row text-center">
+        </div class="col-12 text-center">
+            <form method="post">{% csrf_token %}
+                <h5 class="text-center text-danger mt-3">Вы действительно хотите удалить вопрос "{{ object }}" и все его связи?</h5>
+                <div class="submit-row text-center">
+                    <a href="{% url 'FAQ:settings_bot_detail' object.bot_id %}" class="btn btn-outline-primary custom">Отмена</a>
+                    <input type="submit" class="btn btn-outline-danger custom" value="Удалить" name="_delete">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
 {% endblock %}

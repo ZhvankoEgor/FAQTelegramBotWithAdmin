@@ -42,7 +42,6 @@ class ViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         data = {'bot_name': 'bot6',
                 'status': 'включен',
-                # 'user': self.user1,
                 'title_question': 'ok',
                 'title_button_row': 4,
                 'other_button_row': 4,
@@ -51,4 +50,8 @@ class ViewTestCase(TestCase):
         response2 = self.client.post(url, data)
         self.assertEqual(response2.status_code, 302)
         self.assertEqual(SettingsBot.objects.all().count(), 6)
-        self.assertEqual(get_object_or_404(SettingsBot, token='qweqweqweqweqweqweqwe6', user=self.user1).bot_name, 'bot6')
+        self.assertEqual(get_object_or_404(SettingsBot, token=data['token'], user=self.user1).bot_name, 'bot6')
+
+
+    # def test_edit_settings_bot(self):
+    #     url = reverse("FAQ:edit_settings_bot", )
