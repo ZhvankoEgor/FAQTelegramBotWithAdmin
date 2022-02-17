@@ -1,7 +1,5 @@
 import logging
-import os
 import sys
-# from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from FAQ.management.commands.base_connect import BotQueries
 

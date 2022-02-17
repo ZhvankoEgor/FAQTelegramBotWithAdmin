@@ -101,10 +101,11 @@ class QuestionDeleteView(DeleteView):
 def edit_question(request, bot_id, question_id):
     bot = get_object_or_404(SettingsBot, id=bot_id, user=request.user)
     question = get_object_or_404(Questions, id=question_id, bot=bot_id)
-    QuestionInlineFormSet = inlineformset_factory(Questions, RelationQuestion, exclude=('bot',), fk_name='base', form=SubQuestionForm, can_delete=True)
+    QuestionInlineFormSet = inlineformset_factory(Questions, RelationQuestion, fk_name='base', form=SubQuestionForm, can_delete=True)
     if request.method == "POST":
         form = QuestionsForm(data=request.POST, instance=question)
         formset = QuestionInlineFormSet(request.POST, request.FILES, form_kwargs={'bot_id': bot_id}, instance=question)
+        print(formset)
         if formset.is_valid() and form.is_valid():
             form.save()
             formset.save()
