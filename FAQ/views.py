@@ -16,7 +16,6 @@ class BotCreateView(CreateView):
     model = SettingsBot
     form_class = SettingsBotForm
     template_name = 'FAQ/create_bot.html'
-    permission_clases = []
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -30,7 +29,7 @@ class BotCreateView(CreateView):
 
 
 class SettingsBotDetail(ListView):
-    paginate_by = 3
+    paginate_by = 10
     model = Questions
     template_name = 'FAQ/detail.html'
     context_object_name = 'questions'
@@ -68,15 +67,15 @@ class QuestionCreateView(AuthorFilterMixin, CreateView):
         context['bot'] = get_object_or_404(SettingsBot, id=self.kwargs['bot_id'], user=self.request.user)
         return context
 
-    def form_valid(self, form, request):
+    def form_valid(self, form, **kwargs):
         obj = form.save(commit=False)
         obj.bot_id = self.kwargs['bot_id']
         obj.save()
+        request = kwargs['request']
         if "_save" in request.POST:
             return redirect("FAQ:settings_bot_detail", bot_id=obj.bot_id)
         elif "_addanother" in request.POST:
-            redirect_url = request.path
-            return redirect(redirect_url)
+            return redirect(request.path)
         elif "_add_sub" in request.POST:
             return redirect(obj.get_absolute_url())
 
