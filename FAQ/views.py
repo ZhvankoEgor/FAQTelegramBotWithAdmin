@@ -1,25 +1,18 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
-from django.utils.html import format_html
 from django.views.generic import CreateView, DeleteView, ListView
 
-from .models import Questions, SettingsBot, RelationQuestion
-from .forms import SettingsBotForm, QuestionsForm, SubQuestionForm
-from .utils import AuthorFilterMixin
+from FAQ.models import Questions, SettingsBot, RelationQuestion
+from FAQ.forms import SettingsBotForm, QuestionsForm, SubQuestionForm
+from FAQ.utils import AuthorFilterMixin, CheckLoginMixin
 
 
-class BotCreateView(CreateView):
+class BotCreateView(CheckLoginMixin, CreateView):
     model = SettingsBot
     form_class = SettingsBotForm
     template_name = 'FAQ/create_bot.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(BotCreateView, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
         obj = form.save(commit=False)
@@ -28,14 +21,14 @@ class BotCreateView(CreateView):
         return redirect(obj.get_absolute_url())
 
 
-class SettingsBotDetail(ListView):
+class SettingsBotDetail(CheckLoginMixin, ListView):
     paginate_by = 10
     model = Questions
     template_name = 'FAQ/detail.html'
     context_object_name = 'questions'
 
     def get_queryset(self):
-        return Questions.objects.filter(bot=self.kwargs['bot_id'])
+        return Questions.objects.filter(bot=self.kwargs['bot_id']).select_related('bot')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -50,7 +43,7 @@ class BotDeleteView(AuthorFilterMixin, DeleteView):
     pk_url_kwarg = 'bot_id'
 
 
-class QuestionCreateView(AuthorFilterMixin, CreateView):
+class QuestionCreateView(CheckLoginMixin, CreateView):
     model = Questions
     form_class = QuestionsForm
     template_name = 'FAQ/create_question.html'
@@ -80,7 +73,7 @@ class QuestionCreateView(AuthorFilterMixin, CreateView):
             return redirect(obj.get_absolute_url())
 
 
-class QuestionDeleteView(DeleteView):
+class QuestionDeleteView(AuthorFilterMixin, DeleteView):
     model = Questions
     template_name = 'FAQ/delete_question.html'
     slug_url_kwarg = 'bot_id'
@@ -100,11 +93,18 @@ class QuestionDeleteView(DeleteView):
 def edit_question(request, bot_id, question_id):
     bot = get_object_or_404(SettingsBot, id=bot_id, user=request.user)
     question = get_object_or_404(Questions, id=question_id, bot=bot_id)
-    QuestionInlineFormSet = inlineformset_factory(Questions, RelationQuestion, fk_name='base', form=SubQuestionForm, can_delete=True)
+    queryset_for_choices = Questions.objects.filter(bot=bot.id)
+    QuestionInlineFormSet = inlineformset_factory(Questions,
+                                                  RelationQuestion,
+                                                  fk_name='base',
+                                                  form=SubQuestionForm,
+                                                  can_delete=True)
     if request.method == "POST":
         form = QuestionsForm(data=request.POST, instance=question)
-        formset = QuestionInlineFormSet(request.POST, request.FILES, form_kwargs={'bot_id': bot_id}, instance=question)
-        print(formset)
+        formset = QuestionInlineFormSet(request.POST,
+                                        request.FILES,
+                                        form_kwargs={'queryset_for_choices': queryset_for_choices},
+                                        instance=question)
         if formset.is_valid() and form.is_valid():
             form.save()
             formset.save()
@@ -117,7 +117,7 @@ def edit_question(request, bot_id, question_id):
                 return redirect(redirect_url)
     else:
         form = QuestionsForm(instance=question)
-        formset = QuestionInlineFormSet(form_kwargs={'bot_id': bot_id}, instance=question)
+        formset = QuestionInlineFormSet(form_kwargs={'queryset_for_choices': queryset_for_choices}, instance=question)
     return render(request, 'FAQ/edit_questions.html', {'question': question,
                                                        'bot': bot,
                                                        'form': form,
@@ -130,14 +130,6 @@ def bot_list(request):
     return render(request, 'FAQ/list.html', {'section': 'My bots',
                                              'bots': bots,
                                              })
-
-
-# @login_required
-# def settings_bot_detail(request, bot_id):
-#     bot = get_object_or_404(SettingsBot, id=bot_id, user=request.user)
-#     questions = Questions.objects.filter(bot=bot_id)
-#     return render(request,'FAQ/detail.html', {'bot': bot,
-#                                               'questions': questions})
 
 
 @login_required

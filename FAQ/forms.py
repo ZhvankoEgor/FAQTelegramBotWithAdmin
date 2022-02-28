@@ -4,26 +4,23 @@ from django.forms.widgets import Select, Textarea, CheckboxInput
 from FAQ.models import SettingsBot, RelationQuestion, Questions
 
 
-
 class SubQuestionForm(ModelForm):
     """Показывает вопросы выбранного бота"""
     sub = CharField(widget=Select(attrs={'class': 'form-select'}))
 
     def __init__(self, *args, **kwargs):
-        self.bot_id = kwargs.pop('bot_id', None)
+        self.queryset_for_choices = kwargs.pop('queryset_for_choices', None)
         super(SubQuestionForm, self).__init__(*args, **kwargs)
-        print(self.fields)
-        self.fields['sub'] = ModelChoiceField(Questions.objects.filter(bot=self.bot_id), label="Дополнительный вопрос")
-        print(self.fields)
+        self.fields['sub'] = ModelChoiceField(self.queryset_for_choices, label="Дополнительный вопрос",
+                                              empty_label="Не выбран")
 
     class Meta:
         model = RelationQuestion
         fields = ['sub']
-        widgets = {'sub': Select(attrs={'class': 'form-select'}),}
+        widgets = {'sub': Select(attrs={'class': 'form-select'}), }
 
 
 class QuestionsForm(ModelForm):
-
     class Meta:
         model = Questions
         fields = ['question',
@@ -36,7 +33,6 @@ class QuestionsForm(ModelForm):
 
 
 class SettingsBotForm(ModelForm):
-
     class Meta:
         model = SettingsBot
         fields = ['bot_name',
