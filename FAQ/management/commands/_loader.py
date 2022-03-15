@@ -23,5 +23,5 @@ try:
     print(f"Включен бот ID = {db.bot_id}")
     db.change_bot_status(status='включен',token=str(BOT_TOKEN))
 except BaseException as err:
-    print(f"Ошибка в значении токена ID = {db.bot_id}")
-    db.change_bot_status(status='неверный токен',token=str(BOT_TOKEN))
+    print(f"Возникла ошибка {err} при запуске бота ID = {db.bot_id}")
+    db.change_bot_status(status='выключен',token=str(BOT_TOKEN))

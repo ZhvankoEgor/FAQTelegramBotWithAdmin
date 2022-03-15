@@ -6,7 +6,7 @@ class DBConnector:
     """SQL запросы к базе данных"""
 
     def __init__(self):
-        """Подключаемся к базе данных"""
+        """Подключение к базе данных"""
         self.connection = pymysql.connect(host=DATABASES['default']['HOST'],
                                           user=DATABASES['default']['USER'],
                                           password=DATABASES['default']['PASSWORD'],
@@ -15,52 +15,56 @@ class DBConnector:
                                           )
 
     def get_bot_tokens(self):
-        """Настройки бота"""
-        query = """ SELECT  token
+        """Получение токенов"""
+        query = """ SELECT token
                     FROM FAQ_settingsbot
                     """
         with self.connection.cursor() as cursor:
             cursor.execute(query)
-            return cursor.fetchall()
-
+            tokens_set = {token[0] for token in cursor.fetchall()}
+            return tokens_set
 
 class BotQueries(DBConnector):
     """Запросы экземпляров бота"""
 
     def __init__(self, token):
         super().__init__()
-        self.bot_id = self.get_bot_id(token)[0][0]
+        self.bot_id = self.get_bot_id(token)
 
     def get_bot_id(self, token):
-        """Получаем ID бота на основании токена"""
+        """Получение ID бота"""
         query = """select id
                     FROM FAQ_settingsbot
                     WHERE token=%s"""
         with self.connection.cursor() as cursor:
             cursor.execute(query, (token,))
-            return cursor.fetchall()
+            bot_id = cursor.fetchone()[0]
+            return bot_id
 
     def get_all_questions(self):
-        """Запрос всех вопросов из базы"""
-        query = """ SELECT question, answer, id, general 
+        """Получение вопросов"""
+        query = """ SELECT id, question, answer, general 
                     FROM FAQ_questions
                     WHERE bot_id=%s"""
         with self.connection.cursor() as cursor:
             cursor.execute(query, (self.bot_id,))
-            return cursor.fetchall()
+            question_data = cursor.fetchall()
+            questions = {data[0]: (data[1], data[2], data[3]) for data in question_data}
+            return questions
 
-    def get_relation_question(self):
-        """Запрос связей вопросов"""
-        query = """ SELECT question, answer, sub_id, base_id
+    def get_questions_relations(self):
+        """Получение связей вопросов"""
+        query = """ SELECT base_id, sub_id
                     FROM FAQ_relationquestion as rq 
                     LEFT JOIN FAQ_questions as qu
                     ON qu.id = rq.sub_id
                     WHERE bot_id=%s"""
         with self.connection.cursor() as cursor:
             cursor.execute(query, (self.bot_id,))
-            return cursor.fetchall()
+            relations = list(cursor.fetchall())
+            return relations
 
-    def get_date(self):
+    def get_last_update(self):
         """Дата последнего изменения в базе"""
         query = """ SELECT upd.bot_id, max(upd.updated) as last_update
                     FROM 
@@ -80,9 +84,10 @@ class BotQueries(DBConnector):
                     """
         with self.connection.cursor() as cursor:
             cursor.execute(query, (self.bot_id,))
-            return cursor.fetchall()
+            last_update = cursor.fetchall()[0][1]
+            return last_update
 
-    def settings_bot(self):
+    def get_settings_bot(self):
         """Настройки бота"""
         query = """ SELECT  title_question, 
                             interval_refresh_base, 
@@ -92,10 +97,11 @@ class BotQueries(DBConnector):
                     WHERE id=%s"""
         with self.connection.cursor() as cursor:
             cursor.execute(query, (self.bot_id,))
-            return cursor.fetchall()
+            settings = cursor.fetchone()
+            return settings
 
     def change_bot_status(self, token, status):
-        """Указать статус бота"""
+        """Изменить статус бота"""
         query = """ UPDATE FAQ_settingsbot
                     SET status =%s
                     WHERE token =%s """
@@ -103,19 +109,3 @@ class BotQueries(DBConnector):
         with self.connection.cursor() as cursor:
             cursor.execute(query, (status, token))
             self.connection.commit()
-
-
-    def prnt(self):
-        print(self.bot_id)
-
-
-if __name__ == '__main__':
-    BOT_TOKEN = "5011386007:AAGEz6LCB6HOOPzAZPA6ea-2s2dCVFEs7Ws"
-    db = BotQueries(BOT_TOKEN)
-    print(db.settings_bot())
-    print(db.bot_id)
-    print(db.get_date())
-    db.change_bot_status(status="выключен",token="2006627411:AAHhOB2uPnxkEZIYrb8ECQ8py55axFl0rfA")
-    print(db.get_all_questions())
-    print(db.get_relation_question())
-    last_update = db.get_date()

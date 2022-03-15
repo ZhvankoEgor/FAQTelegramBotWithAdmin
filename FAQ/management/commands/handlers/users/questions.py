@@ -8,23 +8,23 @@ from FAQ.management.commands._loader import dp
 kb = Keyboards()
 
 
-# Обработчик кнопки "Вернуться на главную", должен быть выше хендлера для обработки дополнительных вопросов
+# Обработчик кнопки "Вернуться на главную", должен быть выше обработчика дополнительных вопросов
 @dp.callback_query_handler(text_contains="to_main")
 async def on_main(call: CallbackQuery):
     await call.answer(cache_time=20)
     await call.message.answer(text=kb.setting.title_text,
-                              reply_markup=kb.title)
+                              reply_markup=kb.title_keyboard)
     await call.message.edit_reply_markup()
 
 
 # Обработчик дополнительных вопросов
-@dp.callback_query_handler(text_contains="applic")
+@dp.callback_query_handler(text_contains="sub")
 async def applicate_mes(call: CallbackQuery):
-    index = call.data.split(",")
-    answer = kb.dict_answers[index[1]]
+    question = int(call.data.split(",")[1])
+    answer = kb.questions[question][1]
     await call.answer(cache_time=20)
     await call.message.answer(answer,
-                              reply_markup=kb.dict_keyboards[index[1]])
+                              reply_markup=kb.other_keyboards[question])
     await call.message.edit_reply_markup()
 
 
@@ -32,4 +32,4 @@ async def applicate_mes(call: CallbackQuery):
 @dp.message_handler(Command("start"))
 async def show_items(message: Message):
     await message.answer(text=kb.setting.title_text,
-                         reply_markup=kb.title)
+                         reply_markup=kb.title_keyboard)

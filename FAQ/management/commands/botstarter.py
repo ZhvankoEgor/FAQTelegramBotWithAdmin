@@ -18,8 +18,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         bm = BotsManager()
-        bm.kill_process(set_from_tuple(bm.tokens))
-        bm.run_process(set_from_tuple(bm.tokens))
+        bm.kill_process(bm.tokens)
+        bm.run_process(bm.tokens)
         bm.update_checker()
 
 
@@ -37,15 +37,13 @@ class BotsManager:
                 print('Обновления токенов отсутствуют')
             else:
                 self.update(self.tokens, db.get_bot_tokens())
-                print('tokens updated')
+                print('Токены обновлены')
             sleep(5)
 
     def update(self, old_tokens, new_tokens):
         """Завершает процесс удаленного из БД токена, и запускает процесс для добавленного"""
-        old_tokens_set = set_from_tuple(old_tokens)
-        new_tokens_set = set_from_tuple(new_tokens)
-        killer_set = old_tokens_set - new_tokens_set
-        run_set = new_tokens_set - old_tokens_set
+        killer_set = old_tokens - new_tokens
+        run_set = new_tokens - old_tokens
         self.kill_process(killer_set)
         self.kill_process(run_set)
         self.run_process(run_set)
@@ -57,9 +55,8 @@ class BotsManager:
             process_command = ['python3', 'manage.py', 'app', i]
             for process in psutil.process_iter():
                 if process.cmdline() == process_command:
-                    print('Process found. Terminating it.')
+                    print('Процесс найден, отключаю')
                     process.terminate()
-                    break
 
     def run_process(self, *args):
         """Запуск процессов по токену бота"""

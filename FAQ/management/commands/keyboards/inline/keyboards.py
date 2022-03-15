@@ -11,63 +11,52 @@ class Keyboards:
         # Инициализация настроек
         self.setting = Settings()
         # Получение вопросов и связей из базы данных
-        self.questions = list(db.get_all_questions())
-        self.relations = list(db.get_relation_question())
+        self.questions = db.get_all_questions()
+        self.relations = db.get_questions_relations()
         # Получение даты последнего изменения базы для контроля обновлений
-        self.last_update = db.get_date()
+        self.last_update = db.get_last_update()
         # Создание словарей клавиатур и ответов
-        self.dict_keyboards = {str(x[2]): InlineKeyboardMarkup(row_width=self.setting.other_button_row) for x in self.questions}
-        self.dict_answers = {str(x[2]): str(x[1]) for x in self.questions}
-        # Создание титульной клавиатуры, после нажатия кнопки /start
-        self._title_keyboard()
-        # Инициализация кнопок
-        self.add_button_to_all("Вернуться на главную", "to_main")
-        self._all_keyboards()
+        self.add_button_to_all_keyboards("Вернуться на главную", "to_main")
+        # Инициализация клавиатур
+        self.title_keyboard = InlineKeyboardMarkup(row_width=self.setting.title_button_row)
+        self.create_title_keyboard_button()
+        self.other_keyboards = {question_id: InlineKeyboardMarkup(row_width=self.setting.other_button_row)
+                                for question_id in self.questions.keys()}
+        self.create_other_keyboard_button()
 
-    def _title_keyboard(self):
-        """Создание стартовой клавиатуры"""
-        self.title = InlineKeyboardMarkup(row_width=self.setting.title_button_row)
-        for i in self.questions:
-            if i[3] == True:
-                button = InlineKeyboardButton(text=i[0], callback_data=f"applic,{i[2]}")
-                self.title.insert(button)
 
-    def add_button_to_all(self, text, callback_data):
-        """Функция для добавления кнопки во все клавиатуры кроме стартовой"""
-        for key in self.dict_keyboards:
-            try:
-                if int(key):
-                    self.relations.append((text, text, callback_data, key))
-            except TypeError:
-                print(key + " - не число")
-        self.dict_keyboards.update({callback_data: text})
+    def create_title_keyboard_button(self):
+        """Создание кнопок для стартовой клавиатуры"""
+        for question, data in self.questions.items():
+            if data[2]:
+                button = InlineKeyboardButton(text=data[0], callback_data=f"sub,{question}")
+                self.title_keyboard.insert(button)
 
-    def _all_keyboards(self):
+    def create_other_keyboard_button(self):
         """Создание кнопок для дополнительных клавиатур"""
-        for i in self.relations:
-            for d in self.dict_keyboards.keys():
-                if str(i[3]) == d:
-                    button = InlineKeyboardButton(text=i[0], callback_data=f"applic,{i[2]}")
-                    self.dict_keyboards[d].insert(button)
+        for question in self.questions:
+            for relation in self.relations:
+                if relation[0] == question:
+                    button = InlineKeyboardButton(text=self.questions[relation[1]][0], callback_data=f"sub,{relation[1]}")
+                    self.other_keyboards[question].insert(button)
+
+    def add_button_to_all_keyboards(self, text, callback_data):
+        """Функция добавления кнопки во все клавиатуры, кроме стартовой"""
+        for question in self.questions:
+            try:
+                if int(question):
+                    self.relations.append((question, callback_data))
+            except TypeError:
+                print(question + " - не число")
+        self.questions.update({callback_data: (text, 0, 0)})
 
     async def bot_updater(self):
-        """Обновление кнопок бота при обновлении базы данных"""
+        """Обновление кнопок бота при изменении базы"""
         while True:
             db.__init__(BOT_TOKEN)
-            if self.last_update == db.get_date():
-                print(f'Обновления отсутствуют {db.bot_id}')
+            if self.last_update == db.get_last_update():
+                print(f'Бот {db.bot_id} обновления отсутствуют')
             else:
                 self.__init__()
-                print(f'Base updated {self.last_update[0][1].strftime("%d %B %Y %I:%M%p")} in bot {db.bot_id}')
+                print(f'Данные обновлены {self.last_update.strftime("%d %B %Y %I:%M%p")} бот {db.bot_id}')
             await asyncio.sleep(self.setting.interval_refresh_base)
-
-    # def prnt(self):
-    #     """Печать в консоль инициализированных для бота данных"""
-    #     print(self.dict_keyboards)
-    #     print(self.dict_answers)
-    #     print(self.relations)
-    #     print(self.questions)
-
-if __name__ == '__main__':
-    test = Keyboards()
-    # test.prnt()

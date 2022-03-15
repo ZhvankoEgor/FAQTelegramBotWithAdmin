@@ -6,7 +6,7 @@ from FAQ.management.commands.handlers.users.questions import kb
 
 
 async def on_startup(x):
-    """Запуск асинхронных функций"""
+    """Запуск асинхронных функций проверки обновлений"""
     asyncio.create_task(kb.bot_updater())
 
 if __name__ == '__main__':
